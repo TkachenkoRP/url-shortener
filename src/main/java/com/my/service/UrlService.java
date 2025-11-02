@@ -6,9 +6,7 @@ import com.my.model.User;
 import com.my.util.UrlShortener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -154,26 +152,5 @@ public class UrlService {
                 notificationService.notifyExpired(expiredUrl);
             }
         }
-    }
-
-    public boolean canUserAccessUrl(UUID userId, String shortCode) {
-        ShortUrl shortUrl = urlRepository.get(shortCode);
-        return shortUrl != null && shortUrl.getUserId().equals(userId);
-    }
-
-    public List<ShortUrl> getAllUrls() {
-        return new ArrayList<>(urlRepository.values());
-    }
-
-    public int getTotalUrls() {
-        return urlRepository.size();
-    }
-
-    public Map<UUID, Integer> getUserUrlStats() {
-        Map<UUID, Integer> stats = new HashMap<>();
-        for (ShortUrl url : urlRepository.values()) {
-            stats.merge(url.getUserId(), 1, Integer::sum);
-        }
-        return stats;
     }
 }

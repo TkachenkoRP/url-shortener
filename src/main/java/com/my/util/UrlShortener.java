@@ -7,6 +7,10 @@ import java.util.Base64;
 import java.util.UUID;
 
 public class UrlShortener {
+
+    private UrlShortener() {
+    }
+
     public static String generateShortCode(String originalUrl, UUID userId) {
         try {
             String input = originalUrl + userId.toString() + System.currentTimeMillis();
