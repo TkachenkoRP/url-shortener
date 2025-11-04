@@ -29,8 +29,18 @@ public class UrlService {
     }
 
     public ShortUrl createShortUrl(String originalUrl, User user) {
+        return createShortUrl(originalUrl, user, AppConfig.getDefaultTTLHours());
+    }
+
+    public ShortUrl createShortUrl(String originalUrl, User user, int ttlHours) {
         if (!isValidUrl(originalUrl)) {
             throw new IllegalArgumentException("Invalid URL format");
+        }
+
+        if (ttlHours <= 0 || ttlHours > AppConfig.getMaxTTLHours()) {
+            throw new IllegalArgumentException(
+                    String.format("TTL must be between 1 and %d hours", AppConfig.getMaxTTLHours())
+            );
         }
 
         String shortCode = UrlShortener.generateShortCode(originalUrl, user.getId());
@@ -46,7 +56,7 @@ public class UrlService {
         shortUrl.setClickCount(0);
         shortUrl.setMaxClicks(AppConfig.getDefaultMaxClicks());
         shortUrl.setCreatedAt(LocalDateTime.now());
-        shortUrl.setExpiresAt(LocalDateTime.now().plusHours(AppConfig.getDefaultTTLHours()));
+        shortUrl.setExpiresAt(LocalDateTime.now().plusHours(ttlHours));
         shortUrl.setActive(true);
 
         urlRepository.put(shortCode, shortUrl);

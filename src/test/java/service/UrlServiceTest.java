@@ -7,7 +7,10 @@ import com.my.service.UrlService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UrlServiceTest {
     private UrlService urlService;
@@ -68,4 +71,29 @@ class UrlServiceTest {
         assertThat(urlService.redirect(shortUrl.getShortCode())).isPresent();
         assertThat(urlService.redirect(shortUrl.getShortCode())).isEmpty();
     }
+
+    @Test
+    void testCreateShortUrl_WithCustomTTL_Success() {
+        String originalUrl = "https://www.example.com";
+        int customTTL = 48;
+
+        ShortUrl shortUrl = urlService.createShortUrl(originalUrl, user1, customTTL);
+
+        assertThat(shortUrl).isNotNull();
+        assertThat(shortUrl.getExpiresAt())
+                .isAfter(LocalDateTime.now().plusHours(47))
+                .isBefore(LocalDateTime.now().plusHours(49));
+    }
+
+    @Test
+    void testCreateShortUrl_WithInvalidTTL_ThrowsException() {
+        String originalUrl = "https://www.example.com";
+        int invalidTTL = 0;
+
+        assertThatThrownBy(() -> urlService.createShortUrl(originalUrl, user1, invalidTTL))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("TTL must be between");
+    }
+
+
 }

@@ -13,6 +13,7 @@ public class AppConfig {
             props.load(AppConfig.class.getClassLoader().getResourceAsStream("application.properties"));
         } catch (Exception e) {
             props.setProperty("url.ttl.hours", "24");
+            props.setProperty("url.ttl.max.hours", "720");
             props.setProperty("url.max.clicks.default", "100");
             props.setProperty("url.short.code.length", "6");
             props.setProperty("base.url", "my");
@@ -21,6 +22,10 @@ public class AppConfig {
 
     public static int getDefaultTTLHours() {
         return Integer.parseInt(props.getProperty("url.ttl.hours"));
+    }
+
+    public static int getMaxTTLHours() {
+        return Integer.parseInt(props.getProperty("url.ttl.max.hours"));
     }
 
     public static int getDefaultMaxClicks() {

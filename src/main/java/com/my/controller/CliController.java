@@ -1,5 +1,6 @@
 package com.my.controller;
 
+import com.my.config.AppConfig;
 import com.my.model.ShortUrl;
 import com.my.model.User;
 import com.my.service.UrlService;
@@ -132,14 +133,15 @@ public class CliController {
     private void printMenu() {
         System.out.println("Доступные команды:");
         System.out.println("1. shorten <URL> - Сократить ссылку");
-        System.out.println("2. list - Показать мои ссылки");
-        System.out.println("3. open <short-code> - Открыть ссылку");
-        System.out.println("4. update <short-code> <new-clicks-limit> - Обновить лимит кликов");
-        System.out.println("5. delete <short-code> - Удалить ссылку");
-        System.out.println("6. stats - Показать статистику");
-        System.out.println("7. logout - Выйти из текущей сессии");
-        System.out.println("8. exit - Выйти из приложения");
-        System.out.println("9. help - Показать справку");
+        System.out.println("2. shorten <URL> <hours> - Сократить ссылку с указанным временем жизни");
+        System.out.println("3. list - Показать мои ссылки");
+        System.out.println("4. open <short-code> - Открыть ссылку");
+        System.out.println("5. update <short-code> <new-clicks-limit> - Обновить лимит кликов");
+        System.out.println("6. delete <short-code> - Удалить ссылку");
+        System.out.println("7. stats - Показать статистику");
+        System.out.println("8. logout - Выйти из текущей сессии");
+        System.out.println("9. exit - Выйти из приложения");
+        System.out.println("10. help - Показать справку");
         System.out.print("Введите команду: ");
     }
 
@@ -156,16 +158,12 @@ public class CliController {
             return;
         }
 
-        String[] parts = command.split("\\s+", 2);
+        String[] parts = command.split("\\s+", 3);
         String action = parts[0].toLowerCase();
 
         switch (action) {
             case "shorten":
-                if (parts.length < 2) {
-                    System.out.println("Использование: shorten <URL>");
-                } else {
-                    shortenUrl(parts[1]);
-                }
+                handleShortenCommand(parts);
                 break;
 
             case "list":
@@ -214,9 +212,35 @@ public class CliController {
         }
     }
 
-    private void shortenUrl(String originalUrl) {
+    private void handleShortenCommand(String[] parts) {
+        if (parts.length < 2) {
+            System.out.println("Использование: shorten <URL> [hours]");
+            return;
+        }
+
+        String url = parts[1];
+        int ttlHours = AppConfig.getDefaultTTLHours();
+
+        if (parts.length >= 3) {
+            try {
+                ttlHours = Integer.parseInt(parts[2]);
+                if (ttlHours <= 0 || ttlHours > AppConfig.getMaxTTLHours()) {
+                    System.out.printf("Время жизни должно быть от 1 до %d часов%n",
+                            AppConfig.getMaxTTLHours());
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Неверный формат числа для времени жизни");
+                return;
+            }
+        }
+
+        shortenUrl(url, ttlHours);
+    }
+
+    private void shortenUrl(String originalUrl, int ttlHours) {
         try {
-            ShortUrl shortUrl = urlService.createShortUrl(originalUrl, currentUser);
+            ShortUrl shortUrl = urlService.createShortUrl(originalUrl, currentUser, ttlHours);
             String fullShortUrl = UrlShortener.buildShortUrl(shortUrl.getShortCode());
 
             System.out.println("Ссылка успешно сокращена!");
@@ -224,6 +248,7 @@ public class CliController {
             System.out.println("Сокращенная: " + fullShortUrl);
             System.out.println("Код: " + shortUrl.getShortCode());
             System.out.println("Лимит переходов: " + shortUrl.getMaxClicks());
+            System.out.println("Время жизни: " + ttlHours + " часов");
             System.out.println("Истекает: " + shortUrl.getExpiresAt());
 
         } catch (Exception e) {
